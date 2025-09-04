@@ -13,25 +13,28 @@ $success_message = '';
 
 // Traitement du formulaire de connexion
 if ($_POST) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    // Validation des champs
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
     
-    // Bug volontaire : pas de validation des champs vides
-    // Bug volontaire : pas de protection contre les injections
-    // Bug volontaire : mots de passe en clair
-    
-    // Bug volontaire : connexion automatique si on clique juste sur le bouton
-    if (isset($_POST['submit'])) {
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $username ? $username : 'utilisateur_anonyme';
-        // Redirection vers la page des articles après connexion
-        header('Location: articles.php');
-        exit();
+    if (empty($username) || empty($password)) {
+        $error_message = "Veuillez remplir tous les champs";
+    } else {
+        // Vérification des identifiants
+        if (isset($users[$username]) && $users[$username] === $password) {
+            $_SESSION['logged_in'] = true;
+            $_SESSION['username'] = $username;
+            // Redirection vers la page des articles après connexion
+            header('Location: articles.php');
+            exit();
+        } else {
+            $error_message = "Nom d'utilisateur ou mot de passe incorrect";
+        }
     }
 }
 
-// Bug volontaire : vérification de session incorrecte
-if ($_SESSION['logged_in']) {
+// Vérification de session corrigée
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
     $current_user = $_SESSION['username'];
 }
 ?>
@@ -130,17 +133,7 @@ if ($_SESSION['logged_in']) {
                         <p>Pas encore de compte ? <a href="register.php">S'inscrire</a></p>
                     </div>
                     
-                    <!-- Bug volontaire : informations sensibles affichées -->
-                    <div class="debug-info">
-                        <h3>Informations de debug (à supprimer en production)</h3>
-                        <p>Utilisateurs disponibles :</p>
-                        <ul>
-                            <?php foreach ($users as $user => $pass): ?>
-                                <li><?php echo $user; ?> : <?php echo $pass; ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <p>Session actuelle : <?php var_dump($_SESSION); ?></p>
-                    </div>
+                    <!-- Informations de debug supprimées pour la sécurité -->
                 </div>
             </div>
         </div>
@@ -154,33 +147,24 @@ if ($_SESSION['logged_in']) {
             const usernameInput = document.querySelector('#username');
             const passwordInput = document.querySelector('#password');
             
-            // Bug volontaire : auto-remplissage des champs
-            setTimeout(function() {
-                if (!usernameInput.value) {
-                    usernameInput.value = 'admin';
-                }
-            }, 2000);
+            // Auto-remplissage supprimé pour la sécurité
             
-            // Bug volontaire : validation côté client facilement contournable
+            // Validation côté client améliorée
             loginForm.addEventListener('submit', function(e) {
-                // Cette validation ne sert à rien car elle peut être désactivée
-                if (usernameInput.value.length < 2) {
+                if (usernameInput.value.trim().length < 2) {
                     alert('Le nom d\'utilisateur doit faire au moins 2 caractères');
                     e.preventDefault();
                     return false;
                 }
                 
-                // Bug volontaire : accepte n'importe quel mot de passe
-                if (passwordInput.value || !passwordInput.value) {
-                    console.log('Connexion autorisée pour : ' + usernameInput.value);
+                if (passwordInput.value.trim().length < 3) {
+                    alert('Le mot de passe doit faire au moins 3 caractères');
+                    e.preventDefault();
+                    return false;
                 }
             });
             
-            // Bug volontaire : fonction de bypass en console
-            window.adminBypass = function() {
-                document.cookie = "admin_access=true";
-                location.reload();
-            };
+            // Fonction de bypass supprimée pour la sécurité
         });
     </script>
     
